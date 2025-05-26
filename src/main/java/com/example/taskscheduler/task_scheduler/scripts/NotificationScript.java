@@ -6,6 +6,6 @@ public class NotificationScript implements TaskScript {
     @Override
     public void execute(Map<String, Object> parameters) throws Exception {
         System.out.println("[NOTIFICATION] Выполняю задачу..." + Thread.currentThread().getName() + " ----- " + "Параметры: " + parameters);
-        Thread.currentThread().sleep(5000);
+        Thread.currentThread().sleep(30000);
     }
 }

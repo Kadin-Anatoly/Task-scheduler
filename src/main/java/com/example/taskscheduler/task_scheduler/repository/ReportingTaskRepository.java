@@ -1,7 +1,10 @@
 package com.example.taskscheduler.task_scheduler.repository;
 
 import com.example.taskscheduler.task_scheduler.entity.BillingTask;
+import com.example.taskscheduler.task_scheduler.entity.NotificationTask;
 import com.example.taskscheduler.task_scheduler.entity.ReportingTask;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +31,6 @@ public interface ReportingTaskRepository extends JpaRepository<ReportingTask, Lo
         WHERE id = :id
     """, nativeQuery = true)
     ReportingTask findTaskById(@Param("id") Long id);
+
+    Page<ReportingTask> findByStatus(String status, Pageable pageable);
 }

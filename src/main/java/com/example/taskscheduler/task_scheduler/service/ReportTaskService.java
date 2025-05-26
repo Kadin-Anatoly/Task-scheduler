@@ -9,6 +9,9 @@ import com.example.taskscheduler.task_scheduler.retry.FixedDelayStrategy;
 import com.example.taskscheduler.task_scheduler.retry.RetryStrategy;
 import com.example.taskscheduler.task_scheduler.scripts.TaskScript;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -105,5 +108,11 @@ public class ReportTaskService implements TaskService {
             case "EXPONENTIAL" -> new ExponentialBackoffStrategy();
             default -> throw new IllegalArgumentException("Неизвестная стратегия: " + strategyName);
         };
+    }
+
+    @Override
+    public Page<?> getTasksByStatus(String status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findByStatus(status, pageable);
     }
 }

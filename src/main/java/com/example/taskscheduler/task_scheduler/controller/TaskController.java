@@ -3,6 +3,7 @@ package com.example.taskscheduler.task_scheduler.controller;
 import com.example.taskscheduler.task_scheduler.entity.ScheduledTask;
 import com.example.taskscheduler.task_scheduler.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,4 +43,26 @@ public class TaskController {
 
         }
     }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<?> getTasksByStatus(
+            @PathVariable String status,
+            @RequestParam String category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            int pageIndex = Math.max(page - 1, 0);
+
+            TaskService service = taskServiceFactory.getServiceByCategory(category);
+            Page<?> tasks = service.getTasksByStatus(status, pageIndex, size);
+            return ResponseEntity.ok(tasks);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Ошибка при получении задач: " + e.getMessage());
+        }
+    }
+
+
 }

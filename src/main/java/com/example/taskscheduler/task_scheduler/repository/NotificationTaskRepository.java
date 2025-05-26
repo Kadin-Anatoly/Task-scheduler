@@ -2,6 +2,8 @@ package com.example.taskscheduler.task_scheduler.repository;
 
 import com.example.taskscheduler.task_scheduler.entity.BillingTask;
 import com.example.taskscheduler.task_scheduler.entity.NotificationTask;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +30,6 @@ public interface NotificationTaskRepository extends JpaRepository<NotificationTa
         WHERE id = :id
     """, nativeQuery = true)
     NotificationTask findTaskById(@Param("id") Long id);
+
+    Page<NotificationTask> findByStatus(String status, Pageable pageable);
 }
