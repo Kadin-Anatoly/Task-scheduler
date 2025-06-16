@@ -1,23 +1,18 @@
 package com.example.taskscheduler.task_scheduler.repository;
 
-import com.example.taskscheduler.task_scheduler.entity.BillingTask;
-import com.example.taskscheduler.task_scheduler.entity.NotificationTask;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
-import java.util.List;
+import com.example.taskscheduler.task_scheduler.entity.CustomScheduledTask;
 
 @Repository
-public interface NotificationTaskRepository extends JpaRepository<NotificationTask, Long> {
+public interface TasksRepository extends JpaRepository<CustomScheduledTask,Long> {
     @Query(value = """
     SELECT id
-    FROM scheduled_task_notification
+    FROM scheduled_tasks
     WHERE status = 'PENDING' AND scheduled_time <= NOW()
     ORDER BY scheduled_time ASC
     LIMIT 1
@@ -26,10 +21,10 @@ public interface NotificationTaskRepository extends JpaRepository<NotificationTa
     Long fetchNextPendingTaskId();
 
     @Query(value = """
-        SELECT * FROM scheduled_task_notification
+        SELECT * FROM scheduled_tasks
         WHERE id = :id
     """, nativeQuery = true)
-    NotificationTask findTaskById(@Param("id") Long id);
+    CustomScheduledTask findTaskById(@Param("id") Long id);
 
-    Page<NotificationTask> findByStatus(String status, Pageable pageable);
+    Page<CustomScheduledTask> findByStatus(String status, Pageable pageable);
 }

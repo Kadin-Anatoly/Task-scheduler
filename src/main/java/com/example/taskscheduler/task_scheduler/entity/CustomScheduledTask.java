@@ -1,39 +1,46 @@
 package com.example.taskscheduler.task_scheduler.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.Map;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Entity
+@Table(name = "scheduled_tasks")
+public class CustomScheduledTask {
 
-@MappedSuperclass
-public class ScheduledTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String category; // billing, notification, reporting — или любая другая
+
+    @Column(nullable = false)
     private String scriptClass;
-    private String parameters; // JSON строка
 
+    @Lob
+    @Column(nullable = false)
+    private String parameters;
 
+    @Column(nullable = false)
     private LocalDateTime scheduledTime;
 
-    private String status = "PENDING"; // PENDING, RUNNING, COMPLETED, CANCELLED
-
-    private Integer maxRetries = 0;
-    private String retryStrategy; // NONE, FIXED_DELAY, EXPONENTIAL
-    private Integer retryDelayMs;
-    private Double retryBase = Math.E;
-    private Integer retryMaxDelayMs;
+    @Column(nullable = false)
+    private String status; // PENDING, RUNNING, COMPLETED, FAILED
 
     private Integer attempt = 0;
 
-    public Map<String, Object> getParametersMap() throws Exception {
-        return new ObjectMapper().readValue(parameters, Map.class);
-    }
+    private Integer maxRetries;
 
-    //Геттеры и сеттеры:
+    private String retryStrategy;
+
+    private Integer retryDelayMs;
+
+    private Double retryBase = Math.E;
+
+    private Integer retryMaxDelayMs;
 
     public Long getId() {
         return id;
@@ -41,6 +48,14 @@ public class ScheduledTask {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public String getScriptClass() {
@@ -75,6 +90,14 @@ public class ScheduledTask {
         this.status = status;
     }
 
+    public Integer getAttempt() {
+        return attempt;
+    }
+
+    public void setAttempt(Integer attempt) {
+        this.attempt = attempt;
+    }
+
     public Integer getMaxRetries() {
         return maxRetries;
     }
@@ -99,14 +122,6 @@ public class ScheduledTask {
         this.retryDelayMs = retryDelayMs;
     }
 
-    public Double getRetryBase() {
-        return retryBase;
-    }
-
-    public void setRetryBase(Double retryBase) {
-        this.retryBase = retryBase;
-    }
-
     public Integer getRetryMaxDelayMs() {
         return retryMaxDelayMs;
     }
@@ -115,11 +130,15 @@ public class ScheduledTask {
         this.retryMaxDelayMs = retryMaxDelayMs;
     }
 
-    public Integer getAttempt() {
-        return attempt;
+    public Map<String, Object> getParametersMap() throws Exception {
+        return new ObjectMapper().readValue(parameters, Map.class);
     }
 
-    public void setAttempt(Integer attempt) {
-        this.attempt = attempt;
+    public Double getRetryBase() {
+        return retryBase;
+    }
+
+    public void setRetryBase(Double retryBase) {
+        this.retryBase = retryBase;
     }
 }

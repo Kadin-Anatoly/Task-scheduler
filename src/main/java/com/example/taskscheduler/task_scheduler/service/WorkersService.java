@@ -1,35 +1,31 @@
 package com.example.taskscheduler.task_scheduler.service;
 
-import com.example.taskscheduler.task_scheduler.workers.BillingWorker;
-import com.example.taskscheduler.task_scheduler.workers.NotificationWorker;
-import com.example.taskscheduler.task_scheduler.workers.ReportWorker;
-import lombok.RequiredArgsConstructor;
+import com.example.taskscheduler.task_scheduler.workers.TaskWorker;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 @Service
-@RequiredArgsConstructor
 public class WorkersService implements CommandLineRunner {
 
+    private static final Logger logger = LoggerFactory.getLogger(WorkersService.class);
 
-    private final NotificationWorker notificationWorker;
-    private final ReportWorker reportWorker;
-    private final BillingTaskService billingTaskService;
+    private final Map<String, TaskWorker> taskWorkers; // Карта воркеров по категориям
+    private final Map<String, ExecutorService> workerPools = new ConcurrentHashMap<>(); // Карта пулов воркеров
 
     @Setter
-    private int billingPoolSize = 3;
-    @Setter
-    private int notificationPoolSize = 3;
-    @Setter
-    private int reportingPoolSize = 3;
+    private int poolSize = 2;
 
-    private ExecutorService billingExecutor;
-    private ExecutorService notificationExecutor;
-    private ExecutorService reportingExecutor;
+    public WorkersService(Map<String, TaskWorker> taskWorkers) {
+        this.taskWorkers = taskWorkers;
+    }
 
     @Override
     public void run(String... args) throws Exception {
@@ -37,47 +33,36 @@ public class WorkersService implements CommandLineRunner {
     }
 
     public void startAllWorkers() {
-        shutdownExistingPools();
-
-        billingExecutor = Executors.newFixedThreadPool(billingPoolSize);
-        for (int i = 0; i < billingPoolSize; i++) {
-            System.out.println("Starting worker " + i);
-            billingExecutor.submit(new BillingWorker(billingTaskService));
-        }
-
-        notificationExecutor = Executors.newFixedThreadPool(notificationPoolSize);
-        for (int i = 0; i < notificationPoolSize; i++) {
-            notificationExecutor.submit(notificationWorker);
-        }
-
-        reportingExecutor = Executors.newFixedThreadPool(reportingPoolSize);
-        for (int i = 0; i < reportingPoolSize; i++) {
-            reportingExecutor.submit(reportWorker);
-        }
-
-        System.out.println("Все пулы задач запущены.");
+        taskWorkers.forEach((category, worker) -> {
+            shutdownExistingPool(category);
+            ExecutorService pool = Executors.newFixedThreadPool(poolSize);
+            for (int i = 0; i < poolSize; i++) {
+                pool.submit(worker);
+            }
+            workerPools.put(category, pool);
+            System.out.printf("Пул воркеров для категории %s запущен.", category);
+        });
     }
 
     public void stopAllWorkers() {
-        shutdownExecutor(billingExecutor, "Billing");
-        shutdownExecutor(notificationExecutor, "Notification");
-        shutdownExecutor(reportingExecutor, "Reporting");
-
-        System.out.println("Все пулы задач остановлены.");
+        workerPools.forEach((category, pool) -> {
+            shutdownExecutor(pool, category);
+            System.out.printf("Пул воркеров для категории %s остановлен.", category);
+        });
+        workerPools.clear();
     }
 
-    private void shutdownExecutor(ExecutorService executor, String name) {
+    private void shutdownExecutor(ExecutorService executor, String category) {
         if (executor != null && !executor.isShutdown()) {
             executor.shutdownNow();
-            System.out.println("Пул " + name + " остановлен.");
         }
     }
 
-    private void shutdownExistingPools() {
-        shutdownExecutor(billingExecutor, "Billing");
-        shutdownExecutor(notificationExecutor, "Notification");
-        shutdownExecutor(reportingExecutor, "Reporting");
-
-        System.out.println("Существующие пулы задач остановлены.");
+    private void shutdownExistingPool(String category) {
+        ExecutorService existingPool = workerPools.get(category);
+        if (existingPool != null && !existingPool.isShutdown()) {
+            existingPool.shutdownNow();
+            logger.info("Существующий пул воркеров для категории {} остановлен.", category);
+        }
     }
 }
