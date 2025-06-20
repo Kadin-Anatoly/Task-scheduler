@@ -6,6 +6,6 @@ public class ReportScript implements TaskScript{
         Long userId = parameters.getLong("userId");
         Integer amount = parameters.getInt("amount");
         Thread.sleep(10000);
-        System.out.println("Выполняю reportScript для пользователя ID=" + userId + ", сумма: " + amount);
+        System.out.println("Выполняю ReportScript для пользователя ID = " + userId + ", сумма: " + amount);
     }
 }

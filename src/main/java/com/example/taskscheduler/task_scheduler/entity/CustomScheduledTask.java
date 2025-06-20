@@ -15,7 +15,7 @@ public class CustomScheduledTask {
     private Long id;
 
     @Column(nullable = false)
-    private String category; // billing, notification, reporting — или любая другая
+    private String category;
 
     @Column(nullable = false)
     private String scriptClass;
@@ -28,7 +28,7 @@ public class CustomScheduledTask {
     private LocalDateTime scheduledTime;
 
     @Column(nullable = false)
-    private String status; // PENDING, RUNNING, COMPLETED, FAILED
+    private String status; // PENDING, RUNNING, COMPLETED, FAILED, CANCELLED.
 
     private Integer attempt = 0;
 

@@ -38,9 +38,20 @@ public class TestRunner implements CommandLineRunner {
                     "category", "reporting"
             );
 
+            Map<String, Object> payload3 = Map.of(
+                    "scriptClass", "com.example.taskscheduler.task_scheduler.scripts.EmailScript",
+                    "parameters", Map.of("userId", 123 + i, "amount", 500 + i * 100),
+                    "scheduledTime", "2025-06-16T09:39:30",
+                    "maxRetries", 3,
+                    "retryStrategy", "FIXED_DELAY",
+                    "retryDelayMs", 5000,
+                    "retryMaxDelayMs", 60000,
+                    "category", "email"
+            );
+
             taskSchedulerApi.scheduleTask(payload);
             taskSchedulerApi.scheduleTask(payload2);
-
+            taskSchedulerApi.scheduleTask(payload3);
 
         }
     }

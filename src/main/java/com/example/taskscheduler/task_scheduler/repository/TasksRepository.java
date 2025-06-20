@@ -27,4 +27,14 @@ public interface TasksRepository extends JpaRepository<CustomScheduledTask,Long>
     CustomScheduledTask findTaskById(@Param("id") Long id);
 
     Page<CustomScheduledTask> findByStatus(String status, Pageable pageable);
+
+    @Query(value = """
+        SELECT id
+        FROM scheduled_tasks
+        WHERE status = 'PENDING' AND scheduled_time <= NOW() AND category = :category
+        ORDER BY scheduled_time ASC
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+    """, nativeQuery = true)
+    Long fetchNextPendingTaskIdByCategory(@Param("category") String category);
 }

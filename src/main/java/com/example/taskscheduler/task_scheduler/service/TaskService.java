@@ -16,12 +16,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @Service
 public class TaskService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    private WorkersService workersService;
 
     @Autowired
     private TaskLockService taskLockService;
@@ -50,9 +54,11 @@ public class TaskService {
         task.setRetryDelayMs((Integer) payload.get("retryDelayMs"));
         task.setRetryMaxDelayMs((Integer) payload.get("retryMaxDelayMs"));
         task.setCategory((String) payload.get("category"));
-
         task.setStatus("PENDING");
         task.setAttempt(0);
+
+        workersService.initCategory(task.getCategory(), 1);
+
         repository.save(task);
     }
 
@@ -69,16 +75,15 @@ public class TaskService {
         }).orElse(false);
     }
 
-    public void processTasks() {
-        CustomScheduledTask task = taskLockService.findAndMarkPendingTask();
+    public void processTasks(String category) {
+        CustomScheduledTask task = taskLockService.findAndMarkPendingTaskByCategory(category);
         if (task == null) return;
-        executeTask(task);
+        executeTask(task, category);
     }
 
-    private void executeTask(CustomScheduledTask task) {
+    private void executeTask(CustomScheduledTask task, String category) {
         Thread currentThread = Thread.currentThread();
-        System.out.println("Задача ID=" + task.getId() + " выполняется в потоке: " + currentThread.getName() + " (ID: " + currentThread.getId() + ")");
-
+        System.out.println("Задача ID = " + task.getId() + " с категорией: " + category + " выполняется в потоке: " + currentThread.getName() + " (ID: " + currentThread.getId() + ")");
 
         try {
             Class<?> clazz = Class.forName(task.getScriptClass());
@@ -114,7 +119,7 @@ public class TaskService {
         long delay = strategy.calculateDelay(task, attempt);
 
         task.setAttempt(attempt);
-        task.setScheduledTime(task.getScheduledTime().plus(delay, java.time.temporal.ChronoUnit.MILLIS));
+        task.setScheduledTime(task.getScheduledTime().plus(delay, ChronoUnit.MILLIS));
         task.setStatus("PENDING");
     }
 

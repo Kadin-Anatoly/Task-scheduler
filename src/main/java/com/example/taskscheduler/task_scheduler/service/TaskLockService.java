@@ -22,4 +22,16 @@ public class TaskLockService {
         tasksRepository.save(task);
         return task;
     }
+
+    @Transactional
+    public CustomScheduledTask findAndMarkPendingTaskByCategory(String category) {
+        Long taskId = tasksRepository.fetchNextPendingTaskIdByCategory(category);
+        if (taskId == null) {
+            return null;
+        }
+        CustomScheduledTask task = tasksRepository.findTaskById(taskId);
+        task.setStatus("RUNNING");
+        tasksRepository.save(task);
+        return task;
+    }
 }
