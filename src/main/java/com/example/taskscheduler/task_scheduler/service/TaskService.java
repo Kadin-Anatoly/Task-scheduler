@@ -1,5 +1,6 @@
 package com.example.taskscheduler.task_scheduler.service;
 
+import com.example.taskscheduler.task_scheduler.dto.TaskResponseDto;
 import com.example.taskscheduler.task_scheduler.entity.CustomScheduledTask;
 import com.example.taskscheduler.task_scheduler.repository.TasksRepository;
 import com.example.taskscheduler.task_scheduler.retry.ExponentialBackoffStrategy;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,7 +59,7 @@ public class TaskService {
         task.setStatus("PENDING");
         task.setAttempt(0);
 
-        workersService.initCategory(task.getCategory(), 1);
+        workersService.initCategory(task.getCategory(), 3);
 
         repository.save(task);
     }
@@ -131,9 +133,11 @@ public class TaskService {
         };
     }
 
-    public Page<?> getTasksByStatus(String status, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return repository.findByStatus(status, pageable);
+    // page - Номер страницы, которую нужно получить (нумерация начинается с 0).
+    // size - Количество элементов на странице.
+    public Page<TaskResponseDto> getTasksByStatus(String status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("scheduledTime").ascending());
+        return repository.findByStatus(status, pageable).map(TaskResponseDto::fromEntity);
     }
 }
 
